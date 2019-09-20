@@ -9,7 +9,7 @@ import getopt
 
 import ftplib
 
-ftp = ftplib.FTP('pascal.bcmd.bcm.edu','jarey','Chester_88')
+ftp = ftplib.FTP('pascal.bcmd.bcm.edu','jarey','password')
 
 files = ftp.dir()
 print files
