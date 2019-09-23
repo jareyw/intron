@@ -3,12 +3,18 @@ name: Intron pipeline
 agent:
   machine:
     type: e1-standard-2
-    os_image: ubuntu1804
+  containers:
+    - name: main
+      image: semaphoreci/python:3
 blocks:
   - name: Tests
     task:
       prologue:
         commands:
+          # Install bedtools
+          - sudo apt install bedtools
+          # Install samtools
+          - sudo apt install samtools
           # Add --local pip bin to $PATH
           - export PATH=$HOME/.local/bin:$PATH
           # Install package

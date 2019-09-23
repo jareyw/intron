@@ -24,6 +24,11 @@ Added
 
 - Add utilty classes and methods that help with generation of syntetic files
   used in tests
+- Rewrite intronCounter script into module and expose it as entry point.
+  This enables dual usage::
+
+    - It can be imported and used as any ordinary Python function
+    - It can be run from command line with ``intron-counter`` command
 
 Fixed
 -----

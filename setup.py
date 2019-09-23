@@ -24,12 +24,13 @@ setuptools.setup(
     # Exclude tests from built/installed package.
     packages=setuptools.find_packages(exclude=["*.tests", "*.tests.*"]),
     python_requires=">=3.6, <3.8",
-    install_requires=["numpy"],
+    install_requires=["numpy", "pybedtools", "pysam"],
     extras_require={
         "docs": ["sphinx", "sphinx_rtd_theme"],
         "package": ["twine", "wheel"],
         "test": ["black", "check-manifest", "docutils", "flake8", "isort", "pydocstyle", "pytest-cov"],
     },
+    entry_points={"console_scripts": ["intron-counter = intron.counter:main"]},
     classifiers=[
         "Development Status :: 3 - Alfa",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
