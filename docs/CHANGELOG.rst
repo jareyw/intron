@@ -22,5 +22,8 @@ Added
     - checks that docs can be sucessfully built
     - checks that code is correctly packaged
 
+- Add utilty classes and methods that help with generation of syntetic files
+  used in tests
+
 Fixed
 -----
