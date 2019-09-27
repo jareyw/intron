@@ -1,0 +1,13 @@
+# Package root directory
+recursive-include intron *.py
+# include meta data
+include LICENSE
+include README.rst
+# Include documentation and files needed by documentation.
+recursive-include docs *.py *.rst *.jpg *.png
+# Include tests and files needed by tests.
+include pyproject.toml
+include tox.ini
+recursive-include intron/tests *.py
+# Include legacy code.
+recursive-include legacy *.py *.gtf *.R
