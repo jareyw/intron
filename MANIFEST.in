@@ -9,5 +9,6 @@ recursive-include docs *.py *.rst *.jpg *.png
 include pyproject.toml
 include tox.ini
 recursive-include intron/tests *.py
+include .semaphore/semaphore.yml
 # Include legacy code.
 recursive-include legacy *.py *.gtf *.R

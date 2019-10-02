@@ -1,0 +1,34 @@
+version: v1.0
+name: Intron pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Tests
+    task:
+      prologue:
+        commands:
+          # Add --local pip bin to $PATH
+          - export PATH=$HOME/.local/bin:$PATH
+          # Install package
+          - checkout
+          - mkdir .pip_cache
+          - cache restore
+          - pip install --user .[docs,package,test]
+          # Install tox
+          - pip install --user tox
+          - cache store
+      jobs:
+        - name: Docs
+          commands:
+            - tox -e docs
+        - name: Linters
+          commands:
+            - tox -e linters
+        - name: Packaging
+          commands:
+            - tox -e packaging
+        - name: Unit tests
+          commands:
+            - tox -e py37
