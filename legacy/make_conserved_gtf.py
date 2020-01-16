@@ -1,4 +1,4 @@
-#!usr/bin/python
+#!usr/bin/python3
 
 #make a dictionary of keys: common gene name, collection: exons keys, values: corresponding locus info
 
@@ -15,7 +15,7 @@ fileOut = sys.argv[2]
 d=defaultdict(lambda: defaultdict(list))
 chrom_list = ['chr'+str(i) for i in range(1,23)] #modify this for mouse (should be 20 instead of 23)
 chrom_list.extend(['chrX','chrY'])
-print chrom_list
+print(chrom_list)
 
 #read input gtf and get rid of anything that isn't autosome or X/Y; get rid of NR noncoding transcripts, get rid of poorly annotated LOC transcripts, make sure the feature is an exon (since we're interested in introns)
 for line in open(filePath,'r').readlines():
@@ -43,15 +43,16 @@ for line in open(filePath,'r').readlines():
 
 count=0
 #for each gene name, obtain the broadest coordinates as a duple (list)
-for gene in d:
+d_keys = list(d.keys())
+for gene in d_keys:
 	mincoord = min(d[gene]['duple'])
 	maxcoord = max(d[gene]['duple'])
 	if maxcoord - mincoord > 1000000:
 		count+=1
-		print [gene,mincoord,maxcoord]
+		print([gene,mincoord,maxcoord])
 		d.pop(gene,None)
 	d[gene]['locus'] = [mincoord,maxcoord]
-print count
+print(count)
 
 '''
 #for each gene name, compare the coordinates to ask: does any other gene have coordinates that overlap?
@@ -67,7 +68,7 @@ for gene in d:
 
 	count+=1
 	if count%1000==0:
-		print count
+		print(count)
 
 	for gene2 in d:
 		if d[gene]['chrom'] != d[gene2]['chrom']:
@@ -86,14 +87,14 @@ for gene in d:
 				badList.append(gene2)
 			break
 
-print badList
-print len(badList)
-print len(d)
+print(badList)
+print(len(badList))
+print(len(d))
 
 for gene in badList:
 	d.pop(gene,None)
 
-print len(d)
+print(len(d))
 
 f = open(fileOut,'w')
 
