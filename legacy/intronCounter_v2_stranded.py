@@ -32,6 +32,14 @@ for opt, arg in opts:
 	elif opt in ('-o','--output'):
 		output = arg
 
+def is_read_on_correct_strand(strand, read):
+	if strand == "+" and ((read.is_read1 and read.is_reverse) or (read.is_read2 and not read.is_reverse)):
+		return True
+	elif strand == "-" and ((read.is_read1 and not read.is_reverse) or (read.is_read2 and read.is_reverse)):
+		return True
+
+	return False
+
 def intronCounter(file,short_id,intron_list,output,count):
 	fileout = open(output + '/%s.gtf' % (short_id.rstrip()),'w')
 	#write initial row of intron ids
@@ -51,7 +59,7 @@ def intronCounter(file,short_id,intron_list,output,count):
 	#mapped_reads = reduce(lambda x, y: x + y, [int(l.split('\t')[2]) for l in pysam.idxstats(file).rstrip('\n').split('\n')])
 	#mapped_frags = float(mapped_reads/2) #this is over-conservative, since some frags will only have 1 mapped read (not 2)
 
-	mapped_reads = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(file)])
+	mapped_reads = bamfile.mapped
 	print(mapped_reads)
 
 	subcount=0
@@ -76,7 +84,21 @@ def intronCounter(file,short_id,intron_list,output,count):
 		intron_count=0
 		span_count=0
 		for read in bamfile.fetch(chrom,start+5,end-5):
-			if not read.is_duplicate and not read.is_qcfail and not read.is_secondary and read.is_proper_pair and read.get_tag('XS') == strand: #include XS tag for hisat2 stranded aligned bams (and read.get_tag('XS') == strand)
+			if read.is_duplicate:
+				continue
+			if read.is_qcfail:
+				continue
+			if read.is_secondary:
+				continue
+			if not read.is_proper_pair:
+				continue
+
+			# This check is for ISR reads:
+			# Filtering by correct strand is done for ISR type (Illumina truseq):
+    		# https://salmon.readthedocs.io/en/latest/library_type.html
+    		# TODO: Generalize this for different types of kits.
+			if is_read_on_correct_strand(strand, read):
+
 				span_count+=1
 				if 'N' not in read.cigarstring:
 					intron_count+=1
