@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import pysam
 import sys
@@ -13,9 +13,9 @@ import multiprocessing
 try:
 	opts, args = getopt.getopt(sys.argv[1:],'h:b:g:o:',['bamfolderpaths=','gtffile=','output='])
 except getopt.GetoptError as err:
-	print (err)
+	print(err)
 	sys.exit(2)
-	
+
 for opt, arg in opts:
 	if opt == '-h':
 		sys.exit()
@@ -37,11 +37,11 @@ def intronCounter(file,short_id,intron_list,output,count):
 	#write initial row of intron ids
 
 	count+=1
-	print count
+	print(count)
 
-	print file
-	print pysam.idxstats(file)
-	
+	print(file)
+	print(pysam.idxstats(file))
+
 	bamfile = pysam.AlignmentFile(file,'rb')
 
 	#calculate mappable reads for tcga (star) bams
@@ -52,7 +52,7 @@ def intronCounter(file,short_id,intron_list,output,count):
 	#mapped_frags = float(mapped_reads/2) #this is over-conservative, since some frags will only have 1 mapped read (not 2)
 
 	mapped_reads = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(file)])
-	print mapped_reads
+	print(mapped_reads)
 
 	subcount=0
 	for newline in intron_list:
@@ -60,7 +60,7 @@ def intronCounter(file,short_id,intron_list,output,count):
 
 		subcount+=1
 		if subcount %10000 == 0:
-			print subcount
+			print(subcount)
 
 		chrom = line[0]
 		start = int(line[3])
