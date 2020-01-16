@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 #make a dictionary of keys: common gene name, collection: exons keys, values: corresponding locus info
 
@@ -17,7 +17,7 @@ d=defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 #define chromosome list
 chrom_list = ['chr'+str(i) for i in range(1,23)] #modify this for mouse (should be 20 instead of 23)
 chrom_list.extend(['chrX','chrY'])
-print chrom_list
+print(chrom_list)
 
 gene_order=[]
 
@@ -27,7 +27,7 @@ for line in open(filePath,'r').readlines():
 
 	count+=1
 	if count%10000:
-		print count
+		print(count)
 
 	line = line.rstrip().split('\t')
 	chrom = line[0]
@@ -60,16 +60,16 @@ for gene_id in d:
 		if length > longest:
 			longest = length
 			d[gene_id]['NM_longest'] = {NM_id:[]}
-		d[gene_id]['NM_id'][NM_id] = zip(*[iter(d[gene_id]['NM_id'][NM_id][1:])]*2)
+		d[gene_id]['NM_id'][NM_id] = list(zip(*[iter(d[gene_id]['NM_id'][NM_id][1:])]*2))
 
-print d
-print len(gene_order)
+print(d)
+print(len(gene_order))
 
 f = open(fileOut,'w')
 
 for gene_id in gene_order:
 	x=0
-	NM_longest = d[gene_id]['NM_longest'].keys()[0]
+	NM_longest = list(d[gene_id]['NM_longest'].keys())[0]
 	for duple in d[gene_id]['NM_id'][NM_longest]:
 		x = ['TOSS' if duple not in d[gene_id]['NM_id'][key] else 'KEEP' for key in d[gene_id]['NM_id'].keys()]
 		if 'TOSS' not in x:
