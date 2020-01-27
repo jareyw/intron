@@ -1,109 +1,93 @@
-#!usr/bin/python3
+#!/usr/bin/python3
+"""
+Create custom gtf file.
 
-#make a dictionary of keys: common gene name, collection: exons keys, values: corresponding locus info
+Actions:
+- Keep only chr1, ..., chr23, chrX, chrY
+- Remove NR noncoding transcripts
+- Remove poorly annotated LOC transcripts,
+- Keep only exon features
+- Remove overlapping genes.
+- Remove too long genes.
 
-import sys
-sys.path.append("/Users/fss/codeProjects/pipeline/")
-
+"""
+import argparse
 from collections import defaultdict
 
-#input: read in the full gtf (AceView has ~3e6 lines, RefSeq has ~1e6 lines)
-filePath = sys.argv[1]
-fileOut = sys.argv[2]
+import pybedtools
 
-#line by line, create dictionary of all exons by gene name
-d=defaultdict(lambda: defaultdict(list))
-chrom_list = ['chr'+str(i) for i in range(1,23)] #modify this for mouse (should be 20 instead of 23)
-chrom_list.extend(['chrX','chrY'])
-print(chrom_list)
 
-#read input gtf and get rid of anything that isn't autosome or X/Y; get rid of NR noncoding transcripts, get rid of poorly annotated LOC transcripts, make sure the feature is an exon (since we're interested in introns)
-for line in open(filePath,'r').readlines():
-	line = line.split('\t')
-	gene_id = line[-1].split(' ')[1][1:-2]
-	transcript_id = line[-1].split(' ')[-3][1:-2]
-	chrom = line[0]
-	feature = line[2]
-	start = int(line[3])
-	end = int(line[4])
-	strand = line[6]
-	duple = [start,end]
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Make a custom GTF file.")
+    parser.add_argument("-i", "--input", help="Input GTF file.", required=True)
+    parser.add_argument("-o", "--output", help="Output GTF file.", required=True)
+    return parser.parse_args()
 
-	if chrom not in chrom_list:
-		continue
-	if transcript_id.startswith('NR'):
-		continue
-	if gene_id.startswith('LOC') or feature != "exon":
-		continue
 
-	key = gene_id
-	d[key]['duple'].extend(duple)
-	d[key]['chrom'] = line[0]
-	d[key]['strand'] = strand
+def process_gtf(input_file, output_file):
+    """Parse original GTF."""
+    chrom_list = ["chr" + str(i) for i in range(1, 23)]
+    chrom_list.extend(["chrX", "chrY"])
 
-count=0
-#for each gene name, obtain the broadest coordinates as a duple (list)
-d_keys = list(d.keys())
-for gene in d_keys:
-	mincoord = min(d[gene]['duple'])
-	maxcoord = max(d[gene]['duple'])
-	if maxcoord - mincoord > 1000000:
-		count+=1
-		print([gene,mincoord,maxcoord])
-		d.pop(gene,None)
-	d[gene]['locus'] = [mincoord,maxcoord]
-print(count)
+    d = defaultdict(lambda: defaultdict(list))
+    for segment in pybedtools.BedTool(input_file):
+        gene_id = segment.attrs["gene_id"]
+        if segment.chrom not in chrom_list:
+            continue
+        if segment.attrs["transcript_id"].startswith("NR"):
+            continue
+        if gene_id.startswith("LOC"):
+            continue
+        if segment[2] != "exon":
+            continue
 
-'''
-#for each gene name, compare the coordinates to ask: does any other gene have coordinates that overlap?
+        d[gene_id]["duple"].extend([segment.start, segment.end])
+        d[gene_id]["chrom"] = segment.chrom
+        d[gene_id]["strand"] = segment.strand
 
-#if so, discard both genes from the dictionary [note: there could be a stacking issue with deletion, since if you iteratively delete while the loop is running you could not be catching overlap with deleted items] best to store all bad genes in a list and then dict.pop() all of them at once
+    # For each gene, obtain the broadest coordinates as a [start, stop] "duple"
+    gene_ids = list(d.keys())
+    for gene_id in gene_ids:
+        mincoord = min(d[gene_id]["duple"])
+        maxcoord = max(d[gene_id]["duple"])
+        if maxcoord - mincoord > 1000000:
+            d.pop(gene_id, None)
+        d[gene_id]["locus"] = [mincoord, maxcoord]
 
-#don't forget about chromosomes!
-'''
-count=0
-badList = []
-for gene in d:
-	x,y = d[gene]['locus']
+    # Remove overlapping genes
+    overlapping = set()
+    for gene in d:
+        for gene2 in d:
+            if d[gene]["chrom"] != d[gene2]["chrom"]:
+                continue
+            # if d[gene]["strand"] != d[gene2]["strand"]:
+            #     continue
+            if gene == gene2:
+                continue
 
-	count+=1
-	if count%1000==0:
-		print(count)
+            x, y = d[gene]["locus"]
+            x2, y2 = d[gene2]["locus"]
 
-	for gene2 in d:
-		if d[gene]['chrom'] != d[gene2]['chrom']:
-			continue
-		# if d[gene]['strand'] != d[gene2]['strand']:
-		# 	continue
-		if gene == gene2:
-			continue
+            if x2 < y and y2 > x:
+                overlapping.add(gene)
+                overlapping.add(gene2)
+                break
+    for gene in overlapping:
+        d.pop(gene, None)
 
-		x2,y2 = d[gene2]['locus']
+    with open(output_file, "w") as handle:
+        for segment in pybedtools.BedTool(input_file):
+            if segment.attrs["gene_id"] not in d:
+                continue
+            if not segment.attrs["transcript_id"].startswith("NM"):
+                continue
+            if segment[2] != "exon":
+                continue
 
-		if x2 < y and y2 > x:
-			if gene not in badList:
-				badList.append(gene)
-			if gene2 not in badList:
-				badList.append(gene2)
-			break
+            handle.write(str(segment))
 
-print(badList)
-print(len(badList))
-print(len(d))
 
-for gene in badList:
-	d.pop(gene,None)
-
-print(len(d))
-
-f = open(fileOut,'w')
-
-for line in open(filePath,'r').readlines():
-	newline = line.split('\t')
-	gene_id = newline[-1].split(' ')[1][1:-2]
-	transcript_id = newline[-1].split(' ')[-3][1:-2]
-	if gene_id in d and newline[2] == "exon" and transcript_id.startswith('NM'):
-		f.write(line)
-
-f.close()
-
+if __name__ == "__main__":
+    args = parse_arguments()
+    process_gtf(args.input, args.output)
