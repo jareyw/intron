@@ -61,8 +61,8 @@ def process_gtf(input_file, output_file):
         for gene2 in d:
             if d[gene]["chrom"] != d[gene2]["chrom"]:
                 continue
-            # if d[gene]["strand"] != d[gene2]["strand"]:
-            #     continue
+            if d[gene]["strand"] != d[gene2]["strand"]:
+                continue
             if gene == gene2:
                 continue
 
