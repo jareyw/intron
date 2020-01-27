@@ -1,83 +1,71 @@
 #!/usr/bin/python3
-
-#make a dictionary of keys: common gene name, collection: exons keys, values: corresponding locus info
-
-import sys
-#sys.path.append("/Users/fss/codeProjects/pipeline/")
-
+"""Create custom gtf file."""
+import argparse
 from collections import defaultdict
 
-#input: read in the conserved gtf
-filePath = sys.argv[1]
-fileOut = sys.argv[2]
+import pybedtools
 
-#initialize dictionary of dictionaries
-d=defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
-#define chromosome list
-chrom_list = ['chr'+str(i) for i in range(1,23)] #modify this for mouse (should be 20 instead of 23)
-chrom_list.extend(['chrX','chrY'])
-print(chrom_list)
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Make a custom GTF file.")
+    parser.add_argument("-i", "--input", help="Input GTF file.", required=True)
+    parser.add_argument("-o", "--output", help="Output GTF file.", required=True)
+    return parser.parse_args()
 
-gene_order=[]
 
-#read input gtf and get rid of anything that isn't autosome or X/Y; get rid of NR noncoding transcripts, get rid of poorly annotated LOC transcripts, make sure the feature is an exon (since we're interested in introns)
-count=0
-for line in open(filePath,'r').readlines():
+def process_gtf(input_file, output_file):
+    """Process GTF file."""
+    gene_order = []
+    d = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for segment in pybedtools.BedTool(input_file):
 
-	count+=1
-	if count%10000:
-		print(count)
+        gene_id = segment.attrs["gene_id"]
+        transcript_id = segment.attrs["transcript_id"]
 
-	line = line.rstrip().split('\t')
-	chrom = line[0]
-	source = line[1]
-	feature = line[2]
-	start = int(line[3])
-	end = int(line[4])
-	strand = line[6]
-	info = line[-1]
+        if gene_id not in gene_order:
+            gene_order.append(gene_id)
 
-	gene_id = line[-1].split(' ')[1][1:-2]
-	NM_id = line[-1].split(' ')[-3][1:-2]
+        d[gene_id]["chrom"] = segment.chrom
+        d[gene_id]["strand"] = segment.strand
+        d[gene_id]["transcript_id"][transcript_id].extend([segment.start, segment.end])
 
-	if gene_id not in gene_order:
-		gene_order.append(gene_id)
+    # sort the lists of exon start/end locations
+    for gene_id in d:
+        longest = 0
+        for transcript_id in d[gene_id]["transcript_id"]:
+            d[gene_id]["transcript_id"][transcript_id] = sorted(d[gene_id]["transcript_id"][transcript_id], key=int)
+            length = d[gene_id]["transcript_id"][transcript_id][-1] - d[gene_id]["transcript_id"][transcript_id][0]
+            if length > longest:
+                longest = length
+                d[gene_id]["longest_transcript"] = transcript_id
+            # Here exons are converted to introns:
+            exons = d[gene_id]["transcript_id"][transcript_id]
+            introns = []
+            for exon1_end, exon2_start in zip(exons[1::2], exons[2::2]):
+                introns.append([exon1_end, exon2_start])
+            d[gene_id]["transcript_id"][transcript_id] = introns
 
-	duple = [start,end]
+    f = open(output_file, "w")
+    for gene_id in gene_order:
+        longest_transcript = d[gene_id]["longest_transcript"]
+        # Only keep introns that are shared by all transcripts in gene:
+        for duple in d[gene_id]["transcript_id"][longest_transcript]:
+            x = [
+                "TOSS" if duple not in d[gene_id]["transcript_id"][key] else "KEEP"
+                for key in d[gene_id]["transcript_id"].keys()
+            ]
+            if "TOSS" not in x:
+                chrom = d[gene_id]["chrom"]
+                start = str(duple[0] + 1)
+                end = str(duple[1])
+                strand = d[gene_id]["strand"]
+                string = "gene_id %s; gene_name %s; transcript_id %s;" % (gene_id, gene_id, longest_transcript)
+                f.write("%s\tjarey\tintron\t%s\t%s\t.\t%s\t.\t%s\n" % (chrom, start, end, strand, string))
 
-	#initialize things that don't change from transcript to transcript per gene
-	d[gene_id]['chrom'] = chrom
-	d[gene_id]['strand'] = strand
-	d[gene_id]['NM_id'][NM_id].extend(duple)
+    f.close()
 
-#sort the lists of start/end locations by tss_id if not already sorted (due to nature of extend and the format of gtfs, these lists should already be sorted, but better to be safe)
-for gene_id in d:
-	longest = 0
-	for NM_id in d[gene_id]['NM_id']:
-		d[gene_id]['NM_id'][NM_id] = sorted(d[gene_id]['NM_id'][NM_id],key=int)
-		length = d[gene_id]['NM_id'][NM_id][-1]-d[gene_id]['NM_id'][NM_id][0]
-		if length > longest:
-			longest = length
-			d[gene_id]['NM_longest'] = {NM_id:[]}
-		d[gene_id]['NM_id'][NM_id] = list(zip(*[iter(d[gene_id]['NM_id'][NM_id][1:])]*2))
 
-print(d)
-print(len(gene_order))
-
-f = open(fileOut,'w')
-
-for gene_id in gene_order:
-	x=0
-	NM_longest = list(d[gene_id]['NM_longest'].keys())[0]
-	for duple in d[gene_id]['NM_id'][NM_longest]:
-		x = ['TOSS' if duple not in d[gene_id]['NM_id'][key] else 'KEEP' for key in d[gene_id]['NM_id'].keys()]
-		if 'TOSS' not in x:
-			chrom = d[gene_id]['chrom']
-			start = str(duple[0])
-			end = str(duple[1])
-			strand = d[gene_id]['strand']
-			string = 'gene_id %s; gene_name %s; transcript_id %s;' % (gene_id,gene_id,NM_longest)
-			f.write('%s\tjarey\tintron\t%s\t%s\t.\t%s\t.\t%s\n' % (chrom,start,end,strand,string))
-
-f.close()
+if __name__ == "__main__":
+    args = parse_arguments()
+    process_gtf(args.input, args.output)
