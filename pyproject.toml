@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-target-version = "py36"
+target-version = ["py36"]
 line-length = 119
 
 [tool.isort]
