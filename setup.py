@@ -40,7 +40,6 @@ setuptools.setup(
         ],
     },
     classifiers=[
-        "Development Status :: 3 - Alfa",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",

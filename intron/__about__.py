@@ -9,7 +9,7 @@ __version__ = "0.0.1"
 __author__ = "Therapeutic innovation center, Baylor college of medicine"
 __email__ = "info@genialis.com"
 __license__ = "Apache License 2.0"
-__copyright__ = "2019, " + __author__
+__copyright__ = "2020, " + __author__
 
 __all__ = (
     "__title__",

@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+==================
+0.0.1 - 2020-01-31
+==================
 
 Changed
 -------
@@ -30,6 +30,3 @@ Added
     - checks that code is correctly packaged
 - Add semaphore configuration
 - Add some basic tests
-
-Fixed
------
