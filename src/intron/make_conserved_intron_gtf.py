@@ -34,8 +34,13 @@ def process_gtf(input_file, output_file):
     for gene_id in d:
         longest = 0
         for transcript_id in d[gene_id]["transcript_id"]:
-            d[gene_id]["transcript_id"][transcript_id] = sorted(d[gene_id]["transcript_id"][transcript_id], key=int)
-            length = d[gene_id]["transcript_id"][transcript_id][-1] - d[gene_id]["transcript_id"][transcript_id][0]
+            d[gene_id]["transcript_id"][transcript_id] = sorted(
+                d[gene_id]["transcript_id"][transcript_id], key=int
+            )
+            length = (
+                d[gene_id]["transcript_id"][transcript_id][-1]
+                - d[gene_id]["transcript_id"][transcript_id][0]
+            )
             if length > longest:
                 longest = length
                 d[gene_id]["longest_transcript"] = transcript_id
@@ -60,8 +65,15 @@ def process_gtf(input_file, output_file):
                 start = str(duple[0] + 1)
                 end = str(duple[1])
                 strand = d[gene_id]["strand"]
-                string = "gene_id %s; gene_name %s; transcript_id %s;" % (gene_id, gene_id, longest_transcript)
-                f.write("%s\tjarey\tintron\t%s\t%s\t.\t%s\t.\t%s\n" % (chrom, start, end, strand, string))
+                string = "gene_id %s; gene_name %s; transcript_id %s;" % (
+                    gene_id,
+                    gene_id,
+                    longest_transcript,
+                )
+                f.write(
+                    "%s\tjarey\tintron\t%s\t%s\t.\t%s\t.\t%s\n"
+                    % (chrom, start, end, strand, string)
+                )
 
     f.close()
 

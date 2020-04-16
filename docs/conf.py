@@ -1,7 +1,5 @@
-import imp
+"""Sphinx configuration."""
 import os
-import shlex
-import sys
 
 import sphinx_rtd_theme
 

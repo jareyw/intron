@@ -1,4 +1,6 @@
+"""Package set-up."""
 import os.path
+
 import setuptools
 
 # Get the long description from README.
@@ -8,7 +10,7 @@ with open("README.rst", "r") as fh:
 # Get package metadata from '__about__.py' file.
 about = {}
 base_dir = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(base_dir, 'src', "intron", "__about__.py"), "r") as fh:
+with open(os.path.join(base_dir, "src", "intron", "__about__.py"), "r") as fh:
     exec(fh.read(), about)
 
 setuptools.setup(

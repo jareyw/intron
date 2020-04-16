@@ -8,18 +8,26 @@ import pysam
 
 def parse_arguments():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Count number of unprocessed reads in each intron.")
+    parser = argparse.ArgumentParser(
+        description="Count number of unprocessed reads in each intron."
+    )
     parser.add_argument("-b", "--bam", help="Input BAM file.", required=True)
-    parser.add_argument("-g", "--gtf", help="Input GTF file with introns.", required=True)
+    parser.add_argument(
+        "-g", "--gtf", help="Input GTF file with introns.", required=True
+    )
     parser.add_argument("-o", "--output", help="Output file.", required=True)
     return parser.parse_args()
 
 
 def is_read_on_correct_strand(strand, read):
     """Check if read is on expected strand."""
-    if strand == "+" and ((read.is_read1 and read.is_reverse) or (read.is_read2 and not read.is_reverse)):
+    if strand == "+" and (
+        (read.is_read1 and read.is_reverse) or (read.is_read2 and not read.is_reverse)
+    ):
         return True
-    elif strand == "-" and ((read.is_read1 and not read.is_reverse) or (read.is_read2 and read.is_reverse)):
+    elif strand == "-" and (
+        (read.is_read1 and not read.is_reverse) or (read.is_read2 and read.is_reverse)
+    ):
         return True
 
     return False
