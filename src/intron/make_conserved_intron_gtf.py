@@ -28,6 +28,7 @@ def process_gtf(input_file, output_file):
 
         d[gene_id]["chrom"] = segment.chrom
         d[gene_id]["strand"] = segment.strand
+        d[gene_id]["gene_name"] = segment.attrs.get("gene_name", ".")
         d[gene_id]["transcript_id"][transcript_id].extend([segment.start, segment.end])
 
     # sort the lists of exon start/end locations
@@ -67,7 +68,7 @@ def process_gtf(input_file, output_file):
                 strand = d[gene_id]["strand"]
                 string = "gene_id %s; gene_name %s; transcript_id %s;" % (
                     gene_id,
-                    gene_id,
+                    d[gene_id]["gene_name"],
                     longest_transcript,
                 )
                 f.write(
