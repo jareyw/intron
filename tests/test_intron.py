@@ -1,7 +1,7 @@
 """Test intron."""
 from ngs_test_utils import testcase
 
-from .. import intronCounter_v2_stranded, make_conserved_gtf, make_conserved_intron_gtf
+from intron import intronCounter_v2_stranded, make_conserved_gtf, make_conserved_intron_gtf
 
 
 class IntronTestCase(testcase.NgsTestCase):
