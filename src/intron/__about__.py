@@ -5,7 +5,7 @@
 __title__ = "intron"
 __summary__ = "Intron retention tool"
 __url__ = "https://github.com/jareyw/intron/"
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 __author__ = "Therapeutic innovation center, Baylor college of medicine"
 __email__ = "info@genialis.com"
 __license__ = "Apache License 2.0"

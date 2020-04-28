@@ -6,6 +6,25 @@ All notable changes to this project are documented in this file.
 
 
 ==================
+0.1.0 - 2020-04-28
+==================
+
+Changed
+-------
+- Change directory structure
+- Change testing configuration
+
+Added
+-----
+- Support analysis with ENSEMBL annotation
+
+Fixed
+-----
+- Remove too long genes - the UCSC ones that could be different genes
+  with same id
+
+
+==================
 0.0.1 - 2020-01-31
 ==================
 
