@@ -111,9 +111,9 @@ def process_gtf(input_file, output_file, source):
     for gene_id in gene_ids:
         mincoord = min(d[gene_id]["duple"])
         maxcoord = max(d[gene_id]["duple"])
+        d[gene_id]["locus"] = [mincoord, maxcoord]
         if maxcoord - mincoord > 1000000:
             d.pop(gene_id, None)
-        d[gene_id]["locus"] = [mincoord, maxcoord]
 
     # Remove overlapping genes
     overlapping = set()

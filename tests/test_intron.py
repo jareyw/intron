@@ -15,6 +15,37 @@ class IntronTestCase(testcase.NgsTestCase):
         self.outdir = self.get_tmp_dir()
         self.pkw = {"is_paired": True, "is_proper_pair": True}
 
+    def test_long_gene_removed(self):
+        gtf = self.make_gtf(
+            [
+                dict(
+                    seqname="chr1",
+                    feature="exon",
+                    start=1,
+                    end=100,
+                    strand="+",
+                    transcript_id="NM_1",
+                    gene_id="G1",
+                ),
+                dict(
+                    seqname="chr1",
+                    feature="exon",
+                    start=2_000_000,
+                    end=2_000_100,
+                    strand="+",
+                    transcript_id="NM_1",
+                    gene_id="G1",
+                ),
+            ]
+        )
+
+        ann1 = self.get_filename(extension="gtf")
+
+        make_conserved_gtf.process_gtf(gtf, ann1, source="UCSC")
+
+        # Make sure that the long gene is not included.
+        self.assertEqual(self.tsv_to_list(ann1), [])
+
     def test_intron_ucsc(self):
         gtf = self.make_gtf(
             [
