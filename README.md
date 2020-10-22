@@ -4,7 +4,7 @@
 See our [manuscript](https://www.biorxiv.org/content/10.1101/864165v1) for more details.
 
 <p align="center"> 
-<img src="IR_schematic.png">
+<img src="IR_schematic.png" width="360" height="285" />
 </p>
 
 **Workflow** For each intron feature, the following two read classes are defined: (1) “intronic” reads mapping at least 6 bases contiguously within the intron and (2) “spanning” reads with ends mapping to the flanking exons. The intron retention (IR) score is computed as the ratio of the RPKM-normalized “intronic” read density over the RPKM-normalized “spanning” read density. 
